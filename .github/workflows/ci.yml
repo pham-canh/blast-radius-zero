@@ -1,0 +1,27 @@
+name: ci
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements-dev.txt
+      - run: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest src/ -q
+
+  containment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: docker info
+      - name: Real container probe suite
+        run: |
+          python3 src/main.py --probe | tee /tmp/probe.txt
+          grep -q "runtime: container" /tmp/probe.txt
+          grep -q "BLAST RADIUS ZERO" /tmp/probe.txt
