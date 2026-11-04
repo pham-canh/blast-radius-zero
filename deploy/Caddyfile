@@ -1,0 +1,6 @@
+# Caddy terminates HTTPS and forwards to the Gradio/FastAPI app.
+# The bootstrap script fills in the domain (sslip.io works without a DNS record).
+{$BLAST_RADIUS_DOMAIN:localhost} {
+	encode gzip
+	reverse_proxy 127.0.0.1:7860
+}

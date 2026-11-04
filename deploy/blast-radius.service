@@ -1,0 +1,28 @@
+[Unit]
+Description=Blast Radius demo (Gradio UI + FastAPI healthcheck)
+Documentation=https://github.com/pham-canh/blast-radius-zero
+After=network-online.target docker.service
+Wants=network-online.target docker.service
+
+[Service]
+Type=simple
+User=blastradius
+Group=blastradius
+SupplementaryGroups=docker
+WorkingDirectory=__APP_DIR__
+EnvironmentFile=/etc/blast-radius/blast-radius.env
+ExecStart=__APP_DIR__/.venv/bin/python __APP_DIR__/app.py
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+KillSignal=SIGINT
+
+# The app must spawn containers, so it cannot be fully sandboxed. Keep the
+# filesystem read-only except the state directory the app writes to.
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/blast-radius
+
+[Install]
+WantedBy=multi-user.target
