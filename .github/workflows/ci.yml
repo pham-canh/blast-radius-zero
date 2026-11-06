@@ -12,6 +12,26 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest src/ -q
 
+  ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Gradio app imports and builds its API with the pinned set
+        run: |
+          python3 - <<'PY'
+          import app
+          info = app.demo.get_api_info()
+          assert info["named_endpoints"], info
+          health = app._health()
+          assert health["status"] == "ok", health
+          assert health["provider"] == "vultr", health
+          print("UI endpoints:", len(info["named_endpoints"]))
+          PY
+
   containment:
     runs-on: ubuntu-latest
     steps:
