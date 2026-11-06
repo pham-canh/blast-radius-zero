@@ -1,0 +1,52 @@
+{
+  "schema": "blast-radius/attestation@1",
+  "issued_at": "2026-11-06T03:45:20.255312+00:00",
+  "task": null,
+  "sandbox_runtime": [
+    "container"
+  ],
+  "degraded_runtime": false,
+  "blast_radius": 0,
+  "verdict": "BLAST RADIUS ZERO",
+  "axes": {
+    "process_isolation": {
+      "verdict": "CONTAINED",
+      "probes_measured": "1/1",
+      "evidence": [
+        "CONTAINED"
+      ]
+    },
+    "secret_hygiene": {
+      "verdict": "CONTAINED",
+      "probes_measured": "2/2",
+      "evidence": [
+        "CONTAINED",
+        "CONTAINED egress blocked: OSError"
+      ]
+    },
+    "resource_limits": {
+      "verdict": "CONTAINED",
+      "probes_measured": "2/2",
+      "evidence": [
+        "stopped by limit exit=137 1.4s",
+        "stopped by limit exit=0 0.7s"
+      ]
+    },
+    "lifecycle_discipline": {
+      "verdict": "CONTAINED",
+      "probes_measured": "2/2",
+      "evidence": [
+        "rm_rf contained, host canary intact",
+        "no container or pid file survived"
+      ]
+    }
+  },
+  "host_canary_intact": true,
+  "measured_under": {
+    "vultr_vm_backend": true,
+    "llm_provider": "vultr",
+    "llm_endpoint": "https://api.vultrinference.com/v1",
+    "sandbox_boundary": true
+  },
+  "executive_summary": "Blast Radius Zero: no probe reached the host across all four axes."
+}
