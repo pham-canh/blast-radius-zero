@@ -11,6 +11,7 @@ Group=blastradius
 SupplementaryGroups=docker
 WorkingDirectory=__APP_DIR__
 EnvironmentFile=/etc/blast-radius/blast-radius.env
+Environment=DOCKER_CONFIG=/var/lib/blast-radius/.docker
 ExecStart=__APP_DIR__/.venv/bin/python __APP_DIR__/app.py
 Restart=on-failure
 RestartSec=3

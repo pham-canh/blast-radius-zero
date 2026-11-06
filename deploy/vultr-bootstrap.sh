@@ -33,6 +33,16 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y ca-certificates curl git python3 python3-venv python3-pip docker.io
 
+# A stock Ubuntu image can ship with UFW active and only port 22 open. Caddy
+# needs 80/443 for the certificate; 7860 is the app itself for local checks.
+if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "Status: active"; then
+    ufw allow 22/tcp >/dev/null || true
+    ufw allow 80/tcp >/dev/null || true
+    ufw allow 443/tcp >/dev/null || true
+    ufw allow 7860/tcp >/dev/null || true
+    echo "UFW is active; opened 22, 80, 443, 7860."
+fi
+
 HAVE_CADDY=1
 if ! command -v caddy >/dev/null 2>&1; then
     if ! apt-get install -y caddy; then
@@ -42,6 +52,12 @@ if ! command -v caddy >/dev/null 2>&1; then
 fi
 
 systemctl enable --now docker
+
+# The service runs with ProtectHome=true, so Docker cannot use /root/.docker.
+# Give it an explicit config directory and pull the base image before the demo.
+install -d -m 750 /var/lib/blast-radius/.docker
+docker pull python:3.11-slim >/dev/null 2>&1 || \
+    echo "WARNING: could not pre-pull python:3.11-slim; first run will pull it." >&2
 
 if ! id blastradius >/dev/null 2>&1; then
     useradd --system --create-home --shell /usr/sbin/nologin blastradius
@@ -68,6 +84,7 @@ python3 -m venv "${SOURCE_DIR}/.venv"
 
 install -d -o blastradius -g blastradius /var/lib/blast-radius
 install -d -o blastradius -g blastradius /var/lib/blast-radius/attestations
+install -d -o blastradius -g blastradius -m 750 /var/lib/blast-radius/.docker
 install -d -m 750 /etc/blast-radius
 
 ENV_FILE=/etc/blast-radius/blast-radius.env
@@ -83,9 +100,14 @@ INFERENCE_API_KEY=
 BLAST_RADIUS_BACKEND=vultr
 BLAST_RADIUS_OUTDIR=/var/lib/blast-radius/attestations
 BLAST_RADIUS_HISTORY=/var/lib/blast-radius/history.jsonl
+DOCKER_CONFIG=/var/lib/blast-radius/.docker
 ENV
     chmod 600 "${ENV_FILE}"
     echo "Created ${ENV_FILE}. Add INFERENCE_API_KEY and INFERENCE_MODEL before the demo."
+fi
+
+if ! grep -q '^DOCKER_CONFIG=' "${ENV_FILE}"; then
+    printf '\nDOCKER_CONFIG=/var/lib/blast-radius/.docker\n' >> "${ENV_FILE}"
 fi
 
 IP="$(curl -fsS --max-time 5 https://api.ipify.org || true)"
@@ -131,6 +153,17 @@ if ! grep -qE '^INFERENCE_API_KEY=.+$' "${ENV_FILE}"; then
 fi
 if ! grep -qE '^INFERENCE_MODEL=.+$' "${ENV_FILE}"; then
     echo "WARNING: INFERENCE_MODEL is empty; the UI will report SKIPPED." >&2
+fi
+
+# Prove the service account can really spawn a container, not just that the
+# process is listening. A failure here is a warning, not a deploy abort: the
+# demo URL is still useful for inspecting the report.
+echo
+echo "Verifying containment as the blastradius user..."
+if ! runuser -u blastradius -- env HOME=/var/lib/blast-radius \
+        DOCKER_CONFIG=/var/lib/blast-radius/.docker \
+        "${SOURCE_DIR}/.venv/bin/python" "${SOURCE_DIR}/src/main.py" --probe; then
+    echo "WARNING: containment probe failed; check Docker group membership." >&2
 fi
 
 echo
