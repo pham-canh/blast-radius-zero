@@ -9,6 +9,11 @@ how far the blast radius actually reaches.
 Event: [Vultr: Agent Rush Hackathon](https://lablab.ai/ai-hackathons/vultr-hackathon)
 Challenge: **Blast Radius Zero — Safe Agent Execution on Vultr**
 
+**Live demo:** <https://139.180.147.61.sslip.io/> ·
+**Health:** <https://139.180.147.61.sslip.io/healthz>
+
+![BLAST RADIUS UI — every axis contained, blast radius 0](docs/ui.png)
+
 ## The problem
 
 A June 2026 study ([arXiv 2606.24496](https://arxiv.org/abs/2606.24496)) found
@@ -36,7 +41,25 @@ task, and when it fails the LLM receives the sandbox's real stderr and returns a
 fix. Remove the model and the demo has nothing to run: this is an agent with a
 measured safety boundary, not a static benchmark.
 
+## Verified on Vultr (6 Nov 2026)
+
+- **43/43 tests pass** (`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest src/ -q`).
+- **Real model call** through Vultr Serverless Inference
+  (`deepseek-v4.1-flash-1017`): the generated program ran in a container and
+  printed the correct mean.
+- **Real containment measurement** on the Vultr VM: `blast radius = 0`, all four
+  axes `CONTAINED`, `rm_rf` contained, host canary intact, attestation emitted.
+- **Public demo live** at <https://139.180.147.61.sslip.io/>; `/healthz` reports
+  Docker, provider and model.
+- **Fresh-install pins** in `requirements.txt` were verified in a clean venv
+  (Gradio API info builds; the UI serves HTTP 200).
+
+Evidence, command output and environment: [docs/EVIDENCE.md](docs/EVIDENCE.md).
+
 ## Quickstart
+
+Requirements: Python 3.11+ and Docker. The pins in `requirements.txt` are the
+tested set; do not float them.
 
 ```bash
 # does this machine have a real sandbox boundary?
@@ -180,8 +203,12 @@ The app runs directly on a Vultr Cloud Compute VM, not inside a container: it
 needs to call `docker run` itself. Wrapping it in Docker would require privileged
 mode or docker-in-docker, which we deliberately avoid.
 
+This exact build is deployed on a Vultr Cloud Compute VM (2 vCPU / 4 GB,
+Ubuntu 24.04, Singapore) at <https://139.180.147.61.sslip.io/>.
+
 **1. Create the VM.** Compute → Cloud Compute → Ubuntu 24.04, at least 2 vCPU /
-4 GB RAM. Open ports **22**, **80** and **443** in the firewall.
+4 GB RAM. Open ports **22**, **80** and **443** in the Vultr Cloud Firewall. The
+bootstrap also opens them in UFW if UFW is active on the VM.
 
 **2. Bootstrap the VM.**
 
@@ -194,7 +221,10 @@ sudo BLAST_RADIUS_DOMAIN=demo.example.com \
 
 The script installs Docker, Python, Caddy, a `blastradius` systemd service and
 HTTPS (Caddy falls back to `<vm-ip>.sslip.io` when no domain is given), then
-waits for `/healthz`.
+waits for `/healthz`. It also pins `requirements.txt`, opens UFW if needed, sets
+`DOCKER_CONFIG=/var/lib/blast-radius/.docker` (the service runs with
+`ProtectHome=true`), pre-pulls `python:3.11-slim`, and runs the containment probe
+as the `blastradius` user before printing the URL.
 
 **3. Add the key and one model, then restart.**
 
@@ -207,7 +237,8 @@ sudo systemctl status blast-radius --no-pager
 The demo URL is printed by the script (HTTPS), and `/healthz` shows Docker,
 provider and model status.
 
-**4. Confirm real containment on the VM.**
+**4. Confirm real containment on the VM.** The bootstrap already runs this
+check; the manual command is:
 
 ```bash
 cd /opt/blast-radius
@@ -246,17 +277,34 @@ task -> src/main.py:run_task()
 | `deploy/` | Vultr bootstrap, systemd unit, Caddy HTTPS config |
 | `src/test_smoke.py`, `src/test_containment.py`, `src/test_history.py` | Test suite |
 
+## Business case
+
+Agent security is moving from a checkbox to a budget line. Dell'Oro Group
+forecasts the AI systems security market at roughly **$8B by 2030**; every team
+shipping an agent needs a containment answer for security review. BLAST RADIUS
+is the evidence layer: a repeatable score and an attestation artifact.
+
+- **Wedge:** open-source probe suite + CLI; teams adopt it in CI.
+- **SaaS:** $99/workspace/month for history, policies and audit export.
+- **Metered API:** $0.01/run for platforms that execute customer code.
+- **GTM:** GitHub Action → Vultr Marketplace → agent-platform partnerships.
+
+The market figure is an analyst forecast; the bottom-up SAM (10k agent teams ×
+$10k/yr) is an assumption to validate with design partners.
+
+## Team
+
+**Team arabeacon** — Canh Pham (agent loop, inference, Vultr deployment),
+Abdul Ahad (backend, sandboxing), Amna Yaqoob (product, coordination).
+
 ## Status
 
-Verified: 43 tests pass; the fallback probe suite runs end to end; a real
-container run returns the correct mean from stdin; the self-healing loop is
-unit-tested with a mocked model (failure → repair → success, budget exhaustion,
-and no repair on infrastructure errors).
-Verified on a local Docker daemon: container mode returns **blast radius = 0**
-across all four axes, with the host canary intact (attestation emitted).
-Not yet verified: a real LLM call (needs `INFERENCE_API_KEY` plus
-`INFERENCE_MODEL`; no model id is bundled), deployment to a Vultr VM, and the
-event submission assets (video, deck).
+Verified on 6 Nov 2026: 43/43 tests pass; a real LLM call generated and repaired
+code through Vultr Serverless Inference; a real container run on the Vultr VM
+returned `blast radius = 0` with all four axes `CONTAINED`; the public demo is
+live. Submission assets: [docs/SUBMISSION.md](docs/SUBMISSION.md) (copy),
+[docs/DECK.pdf](docs/DECK.pdf) (10-slide deck), [docs/cover.png](docs/cover.png)
+(16:9 cover), and [docs/EVIDENCE.md](docs/EVIDENCE.md) (command output).
 
 ## License
 
