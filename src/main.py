@@ -131,7 +131,7 @@ def run_task(task: str, *, stdin_data: str | None = None, probe: bool = True,
 def build(task: str, stdin_data: str | None = None, probe_timeout: float = 15.0,
           max_attempts: int = MAX_ATTEMPTS_DEFAULT) -> str:
     """Return the human-readable report. Used by app.py and by CI smoke test."""
-    r = run_task(task, stdin_data=stdin_data, verbose=True,
+    r = run_task(task, stdin_data=stdin_data, verbose=False,
                  probe_timeout=probe_timeout, max_attempts=max_attempts)
     lines = [
         "=" * 72,
@@ -234,7 +234,7 @@ def main() -> int:
 
     if args and args[0] == "--probe":
         print(blast_radius.format_report(
-            blast_radius.run_probes(runtimes=_runtimes(), verbose=True)))
+            blast_radius.run_probes(runtimes=_runtimes(), verbose=False)))
         return 0
     if args and args[0] == "--attest":
         att = attest()
