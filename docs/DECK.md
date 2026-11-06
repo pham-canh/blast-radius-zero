@@ -16,7 +16,7 @@ Cover: [`docs/cover.png`](cover.png)
    live containment screen.
 5. **How it works** — task → Vultr Serverless Inference → disposable container →
    probes → score; self-healing from real stderr.
-6. **Evidence** — 43/43 tests, real model call, stdout `11.67`, all four axes
+6. **Evidence** — 44/44 tests, real model call, stdout `11.67`, all four axes
    CONTAINED, canary intact, blast radius 0.
 7. **Why Vultr** — the VM is the execution host, Serverless Inference writes and
    repairs the code, the container is the boundary. All three are load-bearing.

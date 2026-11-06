@@ -43,7 +43,7 @@ measured safety boundary, not a static benchmark.
 
 ## Verified on Vultr (6 Nov 2026)
 
-- **43/43 tests pass** (`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest src/ -q`).
+- **44/44 tests pass** (`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest src/ -q`).
 - **Real model call** through Vultr Serverless Inference
   (`deepseek-v4.1-flash-1017`): the generated program ran in a container and
   printed the correct mean.
@@ -299,7 +299,7 @@ Abdul Ahad (backend, sandboxing), Amna Yaqoob (product, coordination).
 
 ## Status
 
-Verified on 6 Nov 2026: 43/43 tests pass; a real LLM call generated and repaired
+Verified on 6 Nov 2026: 44/44 tests pass; a real LLM call generated and repaired
 code through Vultr Serverless Inference; a real container run on the Vultr VM
 returned `blast radius = 0` with all four axes `CONTAINED`; the public demo is
 live. Submission assets: [docs/SUBMISSION.md](docs/SUBMISSION.md) (copy),

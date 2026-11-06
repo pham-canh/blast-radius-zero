@@ -12,7 +12,7 @@
 ## Short description (175 / 255 characters)
 
 > An agent that executes model-written code in a disposable Vultr-hosted
-> container and publishes a measured blast radius score. 43 tests, real LLM
+> container and publishes a measured blast radius score. 44 tests, real LLM
 > calls, live demo, attestation.
 
 ## Long description (139 words)
@@ -26,7 +26,7 @@
 > verdict is BLAST RADIUS ZERO and a JSON attestation records the runtime, the
 > four axes, the host canary state and the Vultr backend. The loop is
 > self-healing: a failed program's real stderr goes back to Vultr Serverless
-> Inference for repair. The public demo is live, and the repo includes 43 tests,
+> Inference for repair. The public demo is live, and the repo includes 44 tests,
 > the one-command Vultr bootstrap and the evidence from the 6 Nov run.
 
 ## Tags

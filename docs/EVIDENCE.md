@@ -26,7 +26,7 @@ commands are reproducible from the repo; the live demo is the source of truth.
 ```text
 $ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest src/ -q
 ...........................................                              [100%]
-43 passed in 12.03s
+44 passed in 11.13s
 ```
 
 ## Real agent run (model-written code)

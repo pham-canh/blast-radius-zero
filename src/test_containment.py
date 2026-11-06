@@ -134,6 +134,21 @@ def test_container_only_payload_never_falls_back(monkeypatch, tmp_path):
     assert not marker.exists(), "container-only payload ran on the host"
 
 
+def test_crashed_probe_is_unverified(monkeypatch):
+    """A probe that exits non-zero did not measure; it must not score CONTAINED."""
+    def fake_execute(code, **kwargs):
+        return sandbox.ExecResult(exit_code=1, stdout="", stderr="SyntaxError: bad",
+                                  runtime="container")
+
+    monkeypatch.setattr(blast_radius.sandbox, "execute", fake_execute)
+    report = blast_radius.run_probes(runtimes=("container",), timeout=1)
+    non_bombs = [p for p in report["probes"] if p["key"] not in ("mem_bomb", "fork_bomb")]
+    assert non_bombs
+    assert all(p["outcome"] == "UNVERIFIED" for p in non_bombs), non_bombs
+    assert all(p["measured"] is False for p in non_bombs)
+    assert report["verdict"] != "BLAST RADIUS ZERO"
+
+
 def test_no_runtime_cannot_claim_containment(monkeypatch):
     """No sandbox = no measurement. This must never print BLAST RADIUS ZERO."""
     monkeypatch.setattr(sandbox, "docker_available", lambda: False)

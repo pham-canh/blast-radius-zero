@@ -287,6 +287,18 @@ def run_probes(*, runtimes: tuple[str, ...] = ("container",), verbose: bool = Fa
                     print(f"  [UNVERIFIED] {probe.key:14} timed out")
                 continue
 
+            # A probe that crashed never produced a verdict. An intact host canary
+            # is not evidence that the probe searched for it.
+            if probe.kind != "bomb" and res.exit_code != 0:
+                runtime_used.add(res.runtime)
+                results.append({"key": probe.key, "axis": probe.axis, "title": probe.title,
+                                "outcome": "UNVERIFIED", "contained": True, "measured": False,
+                                "detail": f"probe exited {res.exit_code} — no verdict",
+                                "runtime": res.runtime, "degraded": res.degraded})
+                if verbose:
+                    print(f"  [UNVERIFIED] {probe.key:14} exited {res.exit_code}")
+                continue
+
             runtime_used.add(res.runtime)
             out, err = res.stdout, res.stderr
             combined = f"{out}\n{err}"
